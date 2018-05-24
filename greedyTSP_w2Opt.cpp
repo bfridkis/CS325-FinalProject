@@ -261,7 +261,11 @@ void twoOptImprove(tuple<int, vector<int>> &tspTour,
             for(int j = i + 1; j < get<1>(tspTour).size() - 1; j++)
             {
                 //Swapping cities already adjacent in tour will not
-                //yield an improvement.
+                //yield an improvement. Also prune search by avoiding
+                //swaps where the distance from c1 to c2 is greater than
+                //c2 to c3, as this implies there is no cross-over for
+                //these two cities (vertices).
+                //See https://web.tuke.sk/fei-cit/butka/hop/htsp.pdf
                 if (j - 1 == 1 ||
                     graph[get<1>(tspTour)[i]][get<1>(tspTour)[i + 1]] >
                     graph[get<1>(tspTour)[i + 1]][get<1>(tspTour)[j - 1]])
