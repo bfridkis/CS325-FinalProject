@@ -256,9 +256,9 @@ void twoOptImprove(tuple<int, vector<int>> &tspTour,
     do
     {
         improved = false;
-        for(int i = 1; i < get<1>(tspTour).size() - 2; i++)		//Can't swap 1st city so i starts at 1
+        for(unsigned i = 1; i < get<1>(tspTour).size() - 2; i++)		//Can't swap 1st city so i starts at 1
         {
-            for(int j = i + 1; j < get<1>(tspTour).size() - 1; j++)
+            for(unsigned j = i + 1; j < get<1>(tspTour).size() - 1; j++)
             {
                 //Swapping cities already adjacent in tour will not
                 //yield an improvement. Also prune search by avoiding
@@ -276,24 +276,24 @@ void twoOptImprove(tuple<int, vector<int>> &tspTour,
                 //to the swapped pair of cities.
                 tuple<int, vector<int>> newTSPTour;
 				//Reloads elements 0 - (i - 1) in original order.
-                for(int k = 0; k < i - 1; k++)
+                for(unsigned k = 0; k < i - 1; k++)
                 {
                     get<1>(newTSPTour).push_back(get<1>(tspTour)[k]);
                 }
 				//Reloads elements i - (j - 1) in reverse order.
-                for(int l = j - 1; l >= i - 1; l--)
+                for(unsigned l = j - 1; l >= i - 1; l--)
                 {
                     get<1>(newTSPTour).push_back(get<1>(tspTour)[l]);
                 }
 				//Reloads remaining elements (from j till last element)
                 //in original order.
-                for(int m = j; m < get<1>(tspTour).size(); m++)
+                for(unsigned m = j; m < get<1>(tspTour).size(); m++)
                 {
                     get<1>(newTSPTour).push_back(get<1>(tspTour)[m]);
                 }
 
                 int newDistance = 0;
-                for(int n = 0, o = 1; o < get<1>(tspTour).size() && newDistance < bestRoute; n++, o++)
+                for(unsigned n = 0, o = 1; o < get<1>(tspTour).size() && newDistance < bestRoute; n++, o++)
                 {
                     newDistance += graph[get<1>(newTSPTour)[n]][get<1>(newTSPTour)[o]];
                 }
@@ -322,7 +322,7 @@ int main(int argc, char *argv[])
 	string inputFileName = argv[1];
 	dataOut.open(inputFileName + ".tour");
 	dataOut << get<0>(tspTour) << "\n";
-	for(int i = 0; i < get<1>(tspTour).size(); i++)
+	for(unsigned i = 0; i < get<1>(tspTour).size(); i++)
     {
         dataOut << get<1>(tspTour)[i] << "\n";
     }

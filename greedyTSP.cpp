@@ -69,6 +69,7 @@ typedef priority_queue<CityDistance, vector<CityDistance>, myComparator> CityDis
 vector<CityDistancePQ> loadGraphOfMap(char* dataInputFileName)
 {
 	ifstream inputData1, inputData2;
+	inputData1.exceptions (ifstream::failbit | ifstream::badbit);
 	if(dataInputFileName == nullptr){
         cout << "\nMust enter file name when running program." << endl
              << "Type './greedyTSP file.txt' in command line," << endl
@@ -77,7 +78,6 @@ vector<CityDistancePQ> loadGraphOfMap(char* dataInputFileName)
     }
     try{
         inputData1.open(dataInputFileName);
-        inputData1.exceptions (ifstream::failbit | ifstream::badbit);
     }
     catch(ifstream::failure e){
         std::cerr << "\nFile cannot be found or opened.\n" << endl;
@@ -108,6 +108,7 @@ vector<CityDistancePQ> loadGraphOfMap(char* dataInputFileName)
             pq.push(CityDistance(city, distanceToCity));
         }
         graph.push_back(pq);
+        cout << "city adjacency list for city " << i << " added to graph." << endl;    //***************************************
         inputData2.clear();
         inputData2.seekg(0, ios::beg);
         i++;
@@ -152,6 +153,7 @@ tuple<int, vector<int>> loadTour(vector<CityDistancePQ>& graph)
         }
 
         tspTourCities.push_back(graph[i].top().city);
+        cout << "city " << i << " added to tour." << endl;    //***************************************
         distance += graph[i].top().distanceToCity;
         i = graph[i].top().city;
     }
@@ -179,7 +181,7 @@ int main(int argc, char *argv[])
 	string inputFileName = argv[1];
 	dataOut.open(inputFileName + ".tour");
 	dataOut << get<0>(tspTour) << "\n";
-	for(int i = 0; i < get<1>(tspTour).size(); i++)
+	for(unsigned i = 0; i < get<1>(tspTour).size(); i++)
     {
         dataOut << get<1>(tspTour)[i] << "\n";
     }
