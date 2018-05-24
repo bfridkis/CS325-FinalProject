@@ -107,6 +107,7 @@ vector<CityDistancePQ> loadGraphOfMapAsMinHeaps(char* dataInputFileName)
                                              pow(static_cast<double>(cityY) - static_cast<double>(startingCityY), 2))));
             pq.push(CityDistance(city, distanceToCity));
         }
+		cout << "Loaded adjacency list of city " << i << " as min heap." << endl;	//***************************************
         graph.push_back(pq);
         inputData2.clear();
         inputData2.seekg(0, ios::beg);
@@ -169,6 +170,7 @@ vector<vector<int>> loadGraphOfMapAsVectors(char* dataInputFileName)
                                              pow(static_cast<double>(cityY) - static_cast<double>(startingCityY), 2))));
             v.push_back(distanceToCity);
         }
+		cout << "Loaded adjacency list of city " << i << " as vector." << endl;	//***************************************
         graph.push_back(v);
         inputData2.clear();
         inputData2.seekg(0, ios::beg);
@@ -252,13 +254,23 @@ void twoOptImprove(tuple<int, vector<int>> &tspTour,
 {
     int bestRoute = get<0>(tspTour);
     tuple<int, vector<int>> bestTour = tspTour;
-    bool improved;
+    //This 'timesImprovedLimiter' limits 2Opt-swap improvements
+	//to a total of 10 for input sizes greater than 1000, to keep
+	//run times manageable for large data sets.
+	long timesImprovedLimiter = -1;
+	if(get<1>(tspTour).size() > 1000)
+	{
+		timesImprovedLimiter = 10;
+	}
+	bool improved;
     do
     {
         improved = false;
-        for(int i = 1; i < static_cast<int>(get<1>(tspTour).size()) - 2; i++)		//Can't swap 1st city so i starts at 1
+        for(int i = 1; i < static_cast<int>(get<1>(tspTour).size()) - 2 &&
+				timesImprovedLimiter != 0; i++)		//Can't swap 1st city so i starts at 1
         {
-            for(int j = i + 1; j < static_cast<int>(get<1>(tspTour).size()) - 1; j++)
+            for(int j = i + 1; j < static_cast<int>(get<1>(tspTour).size()) - 1 &&
+					timesImprovedLimiter != 0; j++)
             {
                 //Swapping cities already adjacent in tour will not
                 //yield an improvement.
@@ -297,9 +309,10 @@ void twoOptImprove(tuple<int, vector<int>> &tspTour,
                 //Adds final leg home to newDistance
                 newDistance += graph[get<1>(newTSPTour)[0]][get<1>(newTSPTour)[get<1>(tspTour).size() - 1]];
                 if(newDistance < bestRoute)
-                {
+                {	cout << "Improving..." << endl;	//*******************************************
                     improved = true;
-                    tspTour = newTSPTour;
+					timesImprovedLimiter -= 1;
+                    tspTour.swap(newTSPTour);
                     bestRoute = newDistance;
                     get<0>(tspTour) = newDistance;
                 }
