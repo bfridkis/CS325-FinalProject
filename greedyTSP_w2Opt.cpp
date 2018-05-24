@@ -214,7 +214,7 @@ tuple<int, vector<int>> loadTour(vector<CityDistancePQ>& graph)
         {
             graph[i].pop();
         }
-		//Add closest city that is not already in tour, and 
+		//Add closest city that is not already in tour, and
 		//add associated distance to overall tour distance.
         tspTourCities.push_back(graph[i].top().city);
         distance += graph[i].top().distanceToCity;
@@ -262,7 +262,9 @@ void twoOptImprove(tuple<int, vector<int>> &tspTour,
             {
                 //Swapping cities already adjacent in tour will not
                 //yield an improvement.
-                if (j - 1 == 1)
+                if (j - 1 == 1 ||
+                    graph[get<1>(tspTour)[i]][get<1>(tspTour)[i + 1]] >
+                    graph[get<1>(tspTour)[i + 1]][get<1>(tspTour)[j - 1]])
                 {
                     continue;
                 }
@@ -291,11 +293,8 @@ void twoOptImprove(tuple<int, vector<int>> &tspTour,
                 {
                     newDistance += graph[get<1>(newTSPTour)[n]][get<1>(newTSPTour)[o]];
                 }
-                if (newDistance < bestRoute)
-                {
-                    newDistance += graph[get<1>(newTSPTour)[0]][get<1>(newTSPTour)[get<1>(tspTour).size() - 1]];
-
-                }
+                //Adds final leg home to newDistance
+                newDistance += graph[get<1>(newTSPTour)[0]][get<1>(newTSPTour)[get<1>(tspTour).size() - 1]];
                 if(newDistance < bestRoute)
                 {
                     improved = true;
