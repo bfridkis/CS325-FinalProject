@@ -207,15 +207,19 @@ tuple<int, vector<int>> loadTour(vector<CityDistancePQ>& graph)
     unsigned i, j;
     for(i = 0, j = 0; j < graph.size(); j++)
     {
+		//remove each subsequent closest city if it is already
+		//added to the tour.
         while(find(tspTourCities.begin(), tspTourCities.end(),
                    graph[i].top().city) != tspTourCities.end())
         {
             graph[i].pop();
         }
-
+		//Add closest city that is not already in tour, and 
+		//add associated distance to overall tour distance.
         tspTourCities.push_back(graph[i].top().city);
         distance += graph[i].top().distanceToCity;
-        i = graph[i].top().city;
+        //set i to city added
+		i = graph[i].top().city;
     }
 
     //This loop is needed to find the distance from the last city of the tour
