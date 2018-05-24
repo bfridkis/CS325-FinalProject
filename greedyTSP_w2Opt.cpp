@@ -265,14 +265,18 @@ void twoOptImprove(tuple<int, vector<int>> &tspTour,
                 //The following 3 for loops load the new tour according
                 //to the swapped pair of cities.
                 tuple<int, vector<int>> newTSPTour;
+				//Reloads elements 0 - (i - 1) in original order.
                 for(int k = 0; k < i - 1; k++)
                 {
                     get<1>(newTSPTour).push_back(get<1>(tspTour)[k]);
                 }
+				//Reloads elements i - (j - 1) in reverse order.
                 for(int l = j - 1; l >= i - 1; l--)
                 {
                     get<1>(newTSPTour).push_back(get<1>(tspTour)[l]);
                 }
+				//Reloads remaining elements (from j till last element)
+                //in original order.
                 for(int m = j; m < get<1>(tspTour).size(); m++)
                 {
                     get<1>(newTSPTour).push_back(get<1>(tspTour)[m]);
