@@ -256,7 +256,7 @@ void twoOptImprove(tuple<int, vector<int>> &tspTour,
     do
     {
         improved = false;
-        for(int i = 1; i < get<1>(tspTour).size() - 2; i++)
+        for(int i = 1; i < get<1>(tspTour).size() - 2; i++)		//Can't swap 1st city so i starts at 1
         {
             for(int j = i + 1; j < get<1>(tspTour).size() - 1; j++)
             {
