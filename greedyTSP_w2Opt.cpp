@@ -251,24 +251,36 @@ tuple<int, vector<int>> loadTour(vector<CityDistancePQ>& graph)
 void twoOptImprove(tuple<int, vector<int>> &tspTour,
                    vector<vector<int>> &graph)
 {
-	//This variable (optimizeImprovement) is set to allow the loop to repeat
-	//until the optimal improvement is obtained for small data sizes (n <= 1000).
-	//In this case, execution exits both the inner and outer loops when the first
-	//improvement for the current run is obtained, and the process repeats (until 
-	//(no further improvement is possible.) For large data sets, the improvement 
-	//runs only once (all the way through) to ensure a reasonable running time 
-	//(at the expense of optimality). (See related lines 312-315 and note the control 
-	//statement `optimizeImprovement == false` in both the inner and outer for loops.)
-	bool optimizeImprovement;
+	//This variable (breakOutToOptimize) is set to allow the loop to repeat
+	//until the optimal improvement is obtained for small data sizes (n <= 2500).
+	//In this case, execution exits both the inner and outer loops when each swap
+	//is made, and the process repeats until no further improvement is possible.
+	//For large data sets, the improvement runs only once (all the way through) to 
+	//ensure a reasonable running time (at the expense of optimality). 
+	//(See related lines 321-324 and note the control statement 
+	//`breakOutToOptimize == false` in both the inner and outer for loops.)
+	bool breakOutToOptimize;
+	bool nExceeds2500;
+	bool improved;
+	if(get<1>(tspTour).size() > 2500)
+	{
+		nExceeds2500 = true;
+	}
+	else
+	{
+		nExceeds2500 = false;
+	}
+
     do
     {
-		optimizeImprovement = false;
+		improved = false;
+		breakOutToOptimize = false;
 		//(Can't swap 1st city so i starts at 1...)
         for(int i = 1; i < static_cast<int>(get<1>(tspTour).size()) - 2 &&
-				optimizeImprovement == false; i++)		
+				breakOutToOptimize == false; i++)		
         {	
             for(int j = i, k = i + 1; k < static_cast<int>(get<1>(tspTour).size()) &&
-					optimizeImprovement == false; k++)					
+					breakOutToOptimize == false; k++)					
             {		
 				//Adjacent vertices are not eligible for consideration
 				//because there is only one edge between them.
@@ -294,7 +306,7 @@ void twoOptImprove(tuple<int, vector<int>> &tspTour,
 										(graph[get<1>(tspTour)[j]][get<1>(tspTour)[k - 1]] +
 										 graph[get<1>(tspTour)[j + 1]][get<1>(tspTour)[k]]);
 					
-					
+					improved = true;
 					//Only need to reverse cities in between swapped routes (edges).
 					for(int l = j + 1, m = k - 1; l < m; l++, m--)
 					{	
@@ -306,14 +318,14 @@ void twoOptImprove(tuple<int, vector<int>> &tspTour,
 					//(Otherwise, additional time cost is unreasonable, run 2Opt-swap once over only.)
 					//If enabled (i.e. data set <= 1000), execution exits both inner and outer
 					//loop after improvement to start over.
-					if(get<1>(tspTour).size() <= 2500)
+					if(!nExceeds2500)
 					{
-						optimizeImprovement = true;
-					}	
+						breakOutToOptimize = true;
+					}
 				}
             }
         }
-    }while(optimizeImprovement);
+    }while(improved);
 }
 
 int main(int argc, char *argv[])
