@@ -306,7 +306,7 @@ void twoOptImprove(tuple<int, vector<int>> &tspTour,
 					//(Otherwise, additional time cost is unreasonable, run 2Opt-swap once over only.)
 					//If enabled (i.e. data set <= 1000), execution exits both inner and outer
 					//loop after improvement to start over.
-					if(get<1>(tspTour).size() <= 1000)
+					if(get<1>(tspTour).size() <= 2500)
 					{
 						optimizeImprovement = true;
 					}	
