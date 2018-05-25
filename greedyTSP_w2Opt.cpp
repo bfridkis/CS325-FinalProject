@@ -272,10 +272,10 @@ void twoOptImprove(tuple<int, vector<int>> &tspTour,
             for(int j = i + 1; j < static_cast<int>(get<1>(tspTour).size()) - 1 &&
 					timesImprovedLimiter != 0; j++)
             {
-                //Swapping cities already adjacent in tour will not
-                //yield an improvement.
-                if (j - 1 == 1 ||
-                    graph[get<1>(tspTour)[i]][get<1>(tspTour)[i + 1]] >
+                //If distance(i to i + 1) >
+				//distance(i + 1, j), swaps can be discarded.
+				//(See section 4.1 of https://web.tuke.sk/fei-cit/butka/hop/htsp.pdf)
+                if (graph[get<1>(tspTour)[i]][get<1>(tspTour)[i + 1]] >
                     graph[get<1>(tspTour)[i + 1]][get<1>(tspTour)[j - 1]])
                 {
                     continue;
@@ -301,7 +301,7 @@ void twoOptImprove(tuple<int, vector<int>> &tspTour,
                 }
 
                 int newDistance = 0;
-                for(int n = 0, o = 1; o < static_cast<int>(get<1>(tspTour).size()) 
+                for(int n = 0, o = 1; o < static_cast<int>(get<1>(tspTour).size())
 					&& newDistance < bestRoute; n++, o++)
                 {
                     newDistance += graph[get<1>(newTSPTour)[n]][get<1>(newTSPTour)[o]];
