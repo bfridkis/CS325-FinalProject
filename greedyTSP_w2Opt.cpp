@@ -107,7 +107,6 @@ vector<CityDistancePQ> loadGraphOfMapAsMinHeaps(char* dataInputFileName)
                                              pow(static_cast<double>(cityY) - static_cast<double>(startingCityY), 2))));
             pq.push(CityDistance(city, distanceToCity));
         }
-		cout << "Loaded adjacency list of city " << i << " as min heap." << endl;	//***************************************
         graph.push_back(pq);
         inputData2.clear();
         inputData2.seekg(0, ios::beg);
@@ -170,7 +169,6 @@ vector<vector<int>> loadGraphOfMapAsVectors(char* dataInputFileName)
                                              pow(static_cast<double>(cityY) - static_cast<double>(startingCityY), 2))));
             v.push_back(distanceToCity);
         }
-		cout << "Loaded adjacency list of city " << i << " as vector." << endl;	//***************************************
         graph.push_back(v);
         inputData2.clear();
         inputData2.seekg(0, ios::beg);
@@ -209,7 +207,7 @@ tuple<int, vector<int>> loadTour(vector<CityDistancePQ>& graph)
     int i, j;
     for(i = 0, j = 0; j < static_cast<int>(graph.size()); j++)
     {
-		//remove each subsequent closest city if it is already
+		//Remove each subsequent closest city if it is already
 		//added to the tour.
         while(find(tspTourCities.begin(), tspTourCities.end(),
                    graph[i].top().city) != tspTourCities.end())
@@ -220,7 +218,7 @@ tuple<int, vector<int>> loadTour(vector<CityDistancePQ>& graph)
 		//add associated distance to overall tour distance.
         tspTourCities.push_back(graph[i].top().city);
         distance += graph[i].top().distanceToCity;
-        //set i to city added
+        //Set i to city added
 		i = graph[i].top().city;
     }
 
@@ -242,8 +240,8 @@ tuple<int, vector<int>> loadTour(vector<CityDistancePQ>& graph)
 **                             twoOptImprove                               **
 ** This function receives a tour tuple (tsp solution) and a vector graph   **
 ** (see 'loadMapAsGraphOfVectors' above), and attempts to restructure the  **
-** the tour by 'swapping' every eligible pair of vertices until no added   **
-** improvement can be made. This is in attempt to eliminate path cross-    **
+** the tour by 'swapping' eligible pairs of edges, if said swap reduces    **
+** the total tour distance. This is in attempt to eliminate path cross-    **
 ** over that contributes to sub-optimality. When a swap occurs, the path   **
 ** in between the vertices swapped is reversed,to maintain the tour        **
 ** integrity. See https://en.wikipedia.org/wiki/2-opt and                  **
@@ -252,83 +250,88 @@ tuple<int, vector<int>> loadTour(vector<CityDistancePQ>& graph)
 void twoOptImprove(tuple<int, vector<int>> &tspTour,
                    vector<vector<int>> &graph)
 {
-    int bestRoute = get<0>(tspTour);
-    tuple<int, vector<int>> bestTour = tspTour;
-    //This 'timesImprovedLimiter' limits 2Opt-swap improvements
-	//to a total of 10 for input sizes greater than 1000, to keep
-	//run times manageable for large data sets.
-	long timesImprovedLimiter = -1;
-	if(get<1>(tspTour).size() > 1000)
-	{
-		timesImprovedLimiter = 10;
-	}
-	bool improved;
+	//This variable (optimizeImprovement) is set to allow the loop to repeat
+	//until the optimal improvement is obtained for small data sizes (n <= 1000).
+	//In this case, execution exits both the inner and outer loops when the first
+	//improvement for the current run is obtained, and the process repeats (until 
+	//(no further improvement is possible.) For large data sets, the improvement 
+	//runs only once (all the way through) to ensure a reasonable running time 
+	//(at the expense of optimality). (See related lines 312-315 and note the control 
+	//statement `optimizeImprovement == false` in both the inner and outer for loops.)
+	bool optimizeImprovement;
     do
     {
-        improved = false;
+		optimizeImprovement = false;
+		//(Can't swap 1st city so i starts at 1...)
         for(int i = 1; i < static_cast<int>(get<1>(tspTour).size()) - 2 &&
-				timesImprovedLimiter != 0; i++)		//Can't swap 1st city so i starts at 1
-        {
-            for(int j = i + 1; j < static_cast<int>(get<1>(tspTour).size()) - 1 &&
-					timesImprovedLimiter != 0; j++)
-            {
-                //If distance(i to i + 1) >
-				//distance(i + 1, j), swaps can be discarded.
-				//(See section 4.1 of https://web.tuke.sk/fei-cit/butka/hop/htsp.pdf)
-                if (graph[get<1>(tspTour)[i]][get<1>(tspTour)[i + 1]] >
-                    graph[get<1>(tspTour)[i + 1]][get<1>(tspTour)[j - 1]])
-                {
-                    continue;
-                }
-                //The following 3 for loops load the new tour according
-                //to the swapped pair of cities.
-                tuple<int, vector<int>> newTSPTour;
-				//Reloads elements 0 - (i - 1) in original order.
-                for(int k = 0; k < i - 1; k++)
-                {
-                    get<1>(newTSPTour).push_back(get<1>(tspTour)[k]);
-                }
-				//Reloads elements i - (j - 1) in reverse order.
-                for(int l = j - 1; l >= i - 1; l--)
-                {
-                    get<1>(newTSPTour).push_back(get<1>(tspTour)[l]);
-                }
-				//Reloads remaining elements (from j till last element)
-                //in original order.
-                for(int m = j; m < static_cast<int>(get<1>(tspTour).size()); m++)
-                {
-                    get<1>(newTSPTour).push_back(get<1>(tspTour)[m]);
-                }
-
-                int newDistance = 0;
-                for(int n = 0, o = 1; o < static_cast<int>(get<1>(tspTour).size())
-					&& newDistance < bestRoute; n++, o++)
-                {
-                    newDistance += graph[get<1>(newTSPTour)[n]][get<1>(newTSPTour)[o]];
-                }
-                //Adds final leg home to newDistance
-                newDistance += graph[get<1>(newTSPTour)[0]][get<1>(newTSPTour)[get<1>(tspTour).size() - 1]];
-                if(newDistance < bestRoute)
-                {	cout << "Improving..." << endl;	//*******************************************
-                    improved = true;
-					timesImprovedLimiter -= 1;
-                    tspTour.swap(newTSPTour);
-                    bestRoute = newDistance;
-                    get<0>(tspTour) = newDistance;
-                }
+				optimizeImprovement == false; i++)		
+        {	
+            for(int j = i, k = i + 1; k < static_cast<int>(get<1>(tspTour).size()) &&
+					optimizeImprovement == false; k++)					
+            {		
+				//Adjacent vertices are not eligible for consideration
+				//because there is only one edge between them.
+				if(k - j == 1)
+				{
+					continue;
+				}
+			
+				//If distance(i to i + j -1) + distance(i + 1, j) <
+				//   distance(i to i + 1) + distance(j - 1 to j), the swap
+				//will improve the tour. In other words, if taking out the two
+				//edges before the swap and inserting two new edges (because of swap)
+				//results in shorter tour, the cities are swapped in tour order.
+				if(graph[get<1>(tspTour)[j]][get<1>(tspTour)[k - 1]] +
+				   graph[get<1>(tspTour)[j + 1]][get<1>(tspTour)[k]] <
+				   graph[get<1>(tspTour)[j]][get<1>(tspTour)[j + 1]] +
+				   graph[get<1>(tspTour)[k - 1]][get<1>(tspTour)[k]])
+				{
+					    
+					//Update tour distance based on swapped edges.
+					get<0>(tspTour) -=  (graph[get<1>(tspTour)[j]][get<1>(tspTour)[j + 1]] +
+										 graph[get<1>(tspTour)[k - 1]][get<1>(tspTour)[k]]) -
+										(graph[get<1>(tspTour)[j]][get<1>(tspTour)[k - 1]] +
+										 graph[get<1>(tspTour)[j + 1]][get<1>(tspTour)[k]]);
+					
+					
+					//Only need to reverse cities in between swapped routes (edges).
+					for(int l = j + 1, m = k - 1; l < m; l++, m--)
+					{	
+						int temp = get<1>(tspTour)[l];
+						get<1>(tspTour)[l] = get<1>(tspTour)[m];
+						get<1>(tspTour)[m] = temp;
+					}
+					//Allow optimization of improvement if data size is manageable.
+					//(Otherwise, additional time cost is unreasonable, run 2Opt-swap once over only.)
+					//If enabled (i.e. data set <= 1000), execution exits both inner and outer
+					//loop after improvement to start over.
+					if(get<1>(tspTour).size() <= 1000)
+					{
+						optimizeImprovement = true;
+					}	
+				}
             }
         }
-    }while(improved);
+    }while(optimizeImprovement);
 }
 
 int main(int argc, char *argv[])
 {
+	clock_t begin = clock();
 	vector<CityDistancePQ> graph1 = loadGraphOfMapAsMinHeaps(argv[1]);
 	//printLoaded(graph);  -- Used only for testing
 	tuple<int, vector<int>> tspTour = loadTour(graph1);
-	vector<CityDistancePQ>().swap(graph1);		//Effectively deallocates memory used for graph 1 once no longer needed. See https://stackoverflow.com/questions/10464992/c-delete-vector-objects-free-memory
+	
+	//Effectively deallocates memory used for graph 1 once no longer needed. 
+	//See https://stackoverflow.com/questions/10464992/c-delete-vector-objects-free-memory
+	vector<CityDistancePQ>().swap(graph1);		
+	
 	vector<vector<int>> graph2 = loadGraphOfMapAsVectors(argv[1]);
 	twoOptImprove(tspTour, graph2);
+	clock_t end = clock();
+	double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+	cout << "\nRunning Time: " << elapsed_secs << "\n" << endl;
+	
 	ofstream dataOut;
 	string inputFileName = argv[1];
 	dataOut.open(inputFileName + ".tour");
