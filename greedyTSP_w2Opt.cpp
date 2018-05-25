@@ -16,6 +16,7 @@
 #include <queue>
 #include <algorithm>
 #include <tuple>
+#include <ctime>
 using std::vector;
 using std::string;
 using std::priority_queue;
