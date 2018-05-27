@@ -185,4 +185,6 @@ int main(int argc, char *argv[])
     {
         dataOut << get<1>(tspTour)[i] << "\n";
     }
+	
+	return 0;
 }
