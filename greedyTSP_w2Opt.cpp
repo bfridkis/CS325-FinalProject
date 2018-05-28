@@ -325,7 +325,6 @@ void twoOptImprove(tuple<int, vector<int>> &tspTour,
 				} else {
 					kLimit = tourSize;
 				}
-				std::cout << "kLimit: " << kLimit << "\n";
 				for (int j = i, k = i + 1; k < kLimit; k++) {	
 					if (k - j == 1) {
 						continue;
@@ -410,7 +409,7 @@ int main(int argc, char *argv[])
 
 	timer1 = clock() - timer1;
 	std::cout << "Tour construction run time: " << timer1 << "\n";
-	timer2 = clock();	
+	//timer2 = clock();	
 
 	//string inputFileName = argv[1];
 	//dataOut.open(inputFileName + ".deltesta");
@@ -425,8 +424,8 @@ int main(int argc, char *argv[])
 	//}
 	//dataOut.close();
 
-	twoOptImprove(tspTour, planarG);
-	timer2 = clock() - timer2;
+	//twoOptImprove(tspTour, planarG);
+	//timer2 = clock() - timer2;
 	
 	string inputFileName = argv[1];
 	dataOut.open(inputFileName + ".tour");
@@ -436,6 +435,6 @@ int main(int argc, char *argv[])
         dataOut << get<1>(tspTour)[i] << "\n";
     }
 	dataOut.close();
-	std::cout << "Tour improvement run time: " << timer2 << "\n";
+	//std::cout << "Tour improvement run time: " << timer2 << "\n";
 	std::cout << "CLOCKS_PER_SEC on this system: " << CLOCKS_PER_SEC << "\n";
 }
