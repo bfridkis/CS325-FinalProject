@@ -328,12 +328,11 @@ void twoOptImprove(tuple<int, vector<int>> &tspTour, unordered_map<int, CityPoin
 	int i;
 	int G;
 	int kLimit;
-	int counter = -1;
+	int counter = -2;
 
 	if(get<1>(tspTour).size() > 2500)
 	{
 		breakOutToOptimize = true;
-		counter = 2;
 	}
 	else
 	{
@@ -447,10 +446,10 @@ void twoOptImprove(tuple<int, vector<int>> &tspTour, unordered_map<int, CityPoin
 					}
 				}
 			}
-			if (counter > -1 && breakOutToOptimize) {
-				counter--;
-			}
-	} while(improved == true && counter > 0);
+			if (breakOutToOptimize) {
+				counter++;
+			} 
+	} while(improved == true && counter < 0);
 }
 
 int main(int argc, char *argv[])
