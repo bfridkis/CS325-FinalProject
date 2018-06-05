@@ -63,14 +63,10 @@ public:
 typedef priority_queue<CityDistance, vector<CityDistance>, myComparator> CityDistancePQ;
 
 /**************************************************************************************
-**                          loadGraphOfMapAsMinHeaps                                 **
-** This function creates the map representation in memory. It returns a vector       **
-** of priority queues (min heaps) which each have CityDistance structs (or edges).   **
-** The first element (priority queue) of the returned vector holds the edges         **
-** (as CityDistance structs) for city 0, the second element city 1, and so forth.    **
-** The priority queues (min heaps) of CityDistances for each city maintain heap      **
-** order based on closest city (i.e. the closest city is at the top or 'root' of the **
-** heap.                                                                             **
+**                          loadGraphOfMapAsPriorityQueue                            **
+** This function creates the map representation in memory. It returns a min-heap 	 **
+** holding all edges of the graph, with the edge that has the minimum distance as	 **
+** the "root" of the heap.                                                           **
 **************************************************************************************/
 CityDistancePQ loadGraphOfMapAsPriorityQueue(char* dataInputFileName)
 {
