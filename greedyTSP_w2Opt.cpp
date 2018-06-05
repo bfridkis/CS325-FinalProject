@@ -30,16 +30,20 @@ using std::getline;
 using std::endl;
 using std::find;
 using std::tuple;
+using std::make_tuple;
 using std::get;
 
 //Structure to represent an edge. Each CityDistance structure
 //hold the distance to a particular city.
 struct CityDistance{
 	int city;
+	int nextCity;
 	int distanceToCity;
-	CityDistance(int c, int dTC)
+	CityDistance(){};
+	CityDistance(int c, int nc, int dTC)
 	{
 		city = c;
+		nextCity = nc;
 		distanceToCity = dTC;
 	}
 };
@@ -67,7 +71,7 @@ typedef priority_queue<CityDistance, vector<CityDistance>, myComparator> CityDis
 ** order based on closest city (i.e. the closest city is at the top or 'root' of the **
 ** heap.                                                                             **
 **************************************************************************************/
-vector<CityDistancePQ> loadGraphOfMapAsMinHeaps(char* dataInputFileName)
+CityDistancePQ loadGraphOfMapAsPriorityQueue(char* dataInputFileName)
 {
 	ifstream inputData1, inputData2;
 	if(dataInputFileName == nullptr){
@@ -85,20 +89,21 @@ vector<CityDistancePQ> loadGraphOfMapAsMinHeaps(char* dataInputFileName)
         exit(1);
     }
     inputData2.open(dataInputFileName);
-	vector<CityDistancePQ> graph;
+	CityDistancePQ graph;
 	string line;
 
 	//For every vertex, the distances to all other vertices are calculated and stored (in min heap/priority queue)
 	//since the TSP problem graph is complete (i.e. any city can be accessed from any other).
 	int i = 0;
+	bool cityCountEstablished = false;
+	int cityCount = 0;
 	do
 	{
 	    getline(inputData1, line);
         int startingCity, startingCityX, startingCityY;
         istringstream iss(line);
         iss >> startingCity >> startingCityX >> startingCityY;
-        CityDistancePQ pq;
-        while(getline(inputData2, line))
+		while(getline(inputData2, line))
         {
             int city, cityX, cityY;
             istringstream iss(line);
@@ -106,13 +111,17 @@ vector<CityDistancePQ> loadGraphOfMapAsMinHeaps(char* dataInputFileName)
             int distanceToCity =
                 static_cast<int>(round(sqrt(pow(static_cast<double>(cityX) - static_cast<double>(startingCityX), 2) +
                                              pow(static_cast<double>(cityY) - static_cast<double>(startingCityY), 2))));
-            pq.push(CityDistance(city, distanceToCity));
+            graph.push(CityDistance(startingCity, city, distanceToCity));
+			if(!cityCountEstablished)
+			{
+				cityCount++;
+			}
         }
-        graph.push_back(pq);
+		cityCountEstablished = true;
         inputData2.clear();
         inputData2.seekg(0, ios::beg);
         i++;
-	} while(i < static_cast<int>(graph[0].size()));
+	} while(i < cityCount);
 	inputData1.close();
 	inputData2.close();
 
@@ -200,40 +209,83 @@ void printLoaded(vector<CityDistancePQ>& v)
 ** vector of cities ('<1>' of tuple) established in the order the cities are to be   **
 ** visited on the tour.                                                              **
 **************************************************************************************/
-tuple<int, vector<int>> loadTour(vector<CityDistancePQ>& graph)
+tuple<int, vector<int>> loadTour(CityDistancePQ& graph)
 {
+	int cityCount = sqrt(graph.size());
     tuple<int, vector<int>> tspTour;
-    int distance = 0;
-    vector<int> tspTourCities;
-    int i, j;
-    for(i = 0, j = 0; j < static_cast<int>(graph.size()); j++)
-    {
-		//Remove each subsequent closest city if it is already
-		//added to the tour.
-        while(find(tspTourCities.begin(), tspTourCities.end(),
-                   graph[i].top().city) != tspTourCities.end())
-        {
-            graph[i].pop();
-        }
-		//Add closest city that is not already in tour, and
-		//add associated distance to overall tour distance.
-        tspTourCities.push_back(graph[i].top().city);
-        distance += graph[i].top().distanceToCity;
-        //Set i to city added
-		i = graph[i].top().city;
-    }
 
-    //This loop is needed to find the distance from the last city of the tour
-    //back to the home city. (Variable i is assigned last city of tour when previous
-    //for loop exits.
-    while(graph[0].top().city != i)
-    {
-        graph[0].pop();
-    }
-    get<0>(tspTour) = distance + graph[0].top().distanceToCity;     //Adds distance to last city before assigning to the tuple.
-    get<1>(tspTour) = tspTourCities;
+	//The vector of tuples below (cityTourPositionTracker)
+	//stores for each city a boolean to indicate if the city
+	//has been added to the tour, an integer to indicate
+	//the city's forward adjacent city (or "next city"),
+	//and an integer to indicate the city's backward adjacent
+	//city (or "previous city). A value of -1 for the next city
+	//item (2nd tuple item) or previous city item (3rd tuple item)
+	//indicates that a city has not been assigned a next city or
+	//previous city, respectively.
+	vector<tuple<bool, int, int>> cityTourPositionTracker;
+	for(int i = 0; i < cityCount; i++)
+	{
+		cityTourPositionTracker.push_back(make_tuple(false, -1, -1));
+	}
 
-    return tspTour;
+	int distance = 0;
+    for(int i = 0; i < cityCount; i++)
+    {
+		bool edgeAdded = false;
+		while(!edgeAdded)
+		{
+			//The while loop below removes any ineligible edge (except for those
+            //that result in a cycle (which are handled in lines 253-266). Ineligible
+			//edges removed here are those with cities (vertices) that already have
+            //two adjacent cities (vertices) and self-referential edges.
+			while(get<0>(cityTourPositionTracker[graph.top().city]) == true ||
+				  get<2>(cityTourPositionTracker[graph.top().nextCity]) != -1 ||
+                  graph.top().city == graph.top().nextCity)
+			{
+				graph.pop();
+			}
+			//Lines 253-266 check to make sure the current edge
+			//will not create a cycle (except when adding the final
+			//edge) when added to the tour. If adding the edge will
+			//create a cycle, it is discarded and the compatibility
+			//checks restart at line 242.
+			int downstreamCity = graph.top().nextCity;
+			bool edgeCreatesCycle = false;
+
+            //(Note the last edge added is allowed to make the cycle, hence the condition
+            //"i < cityCount - 1" in the while loop below.)
+			while(get<0>(cityTourPositionTracker[downstreamCity]) == true &&
+					get<1>(cityTourPositionTracker[downstreamCity]) != -1 && i < cityCount - 1)
+			{
+				downstreamCity = get<1>(cityTourPositionTracker[downstreamCity]);
+				if(downstreamCity == graph.top().city)
+				{
+					graph.pop();
+					edgeCreatesCycle = true;
+					break;
+				}
+			}
+
+			if(!edgeCreatesCycle)
+			{
+				get<0>(cityTourPositionTracker[graph.top().city]) = true;
+				get<1>(cityTourPositionTracker[graph.top().city]) = graph.top().nextCity;
+				get<2>(cityTourPositionTracker[graph.top().nextCity]) = graph.top().city;
+				distance += graph.top().distanceToCity;
+				graph.pop();
+				edgeAdded = true;
+			}
+		}
+	}
+	for(int i = 0, j = 0; i < cityCount; i++)
+	{
+		get<1>(tspTour).push_back(j);
+		j = get<1>(cityTourPositionTracker[j]);
+	}
+	get<0>(tspTour) = distance;
+
+	return tspTour;
 
 }
 
@@ -255,9 +307,9 @@ void twoOptImprove(tuple<int, vector<int>> &tspTour,
 	//until the optimal improvement is obtained for small data sizes (n <= 2500).
 	//In this case, execution exits both the inner and outer loops when each swap
 	//is made, and the process repeats until no further improvement is possible.
-	//For large data sets, the improvement runs only once (all the way through) to 
-	//ensure a reasonable running time (at the expense of optimality). 
-	//(See related lines 321-324 and note the control statement 
+	//For large data sets, the improvement runs only once (all the way through) to
+	//ensure a reasonable running time (at the expense of optimality).
+	//(See related lines 321-324 and note the control statement
 	//`breakOutToOptimize == false` in both the inner and outer for loops.)
 	bool breakOutToOptimize;
 	bool nExceeds2500;
@@ -277,20 +329,20 @@ void twoOptImprove(tuple<int, vector<int>> &tspTour,
 		breakOutToOptimize = false;
 		//(Can't swap 1st city so i starts at 1...)
         for(int i = 1; i < static_cast<int>(get<1>(tspTour).size()) - 2 &&
-				breakOutToOptimize == false; i++)		
-        {	
+				breakOutToOptimize == false; i++)
+        {
             for(int j = i, k = i + 1; k < static_cast<int>(get<1>(tspTour).size()) &&
-					breakOutToOptimize == false; k++)					
-            {		
+					breakOutToOptimize == false; k++)
+            {
 				//Adjacent vertices are not eligible for consideration
 				//because there is only one edge between them.
 				if(k - j == 1)
 				{
 					continue;
 				}
-			
+
 				//If distance(i to i + j -1) + distance(i + 1, j) <
-				//   distance(i to i + 1) + distance(j - 1 to j), the swap
+				//distance(i to i + 1) + distance(j - 1 to j), the swap
 				//will improve the tour. In other words, if taking out the two
 				//edges before the swap and inserting two new edges (because of swap)
 				//results in shorter tour, the cities are swapped in tour order.
@@ -299,17 +351,17 @@ void twoOptImprove(tuple<int, vector<int>> &tspTour,
 				   graph[get<1>(tspTour)[j]][get<1>(tspTour)[j + 1]] +
 				   graph[get<1>(tspTour)[k - 1]][get<1>(tspTour)[k]])
 				{
-					    
+
 					//Update tour distance based on swapped edges.
 					get<0>(tspTour) -=  (graph[get<1>(tspTour)[j]][get<1>(tspTour)[j + 1]] +
 										 graph[get<1>(tspTour)[k - 1]][get<1>(tspTour)[k]]) -
 										(graph[get<1>(tspTour)[j]][get<1>(tspTour)[k - 1]] +
 										 graph[get<1>(tspTour)[j + 1]][get<1>(tspTour)[k]]);
-					
+
 					improved = true;
 					//Only need to reverse cities in between swapped routes (edges).
 					for(int l = j + 1, m = k - 1; l < m; l++, m--)
-					{	
+					{
 						int temp = get<1>(tspTour)[l];
 						get<1>(tspTour)[l] = get<1>(tspTour)[m];
 						get<1>(tspTour)[m] = temp;
@@ -331,20 +383,20 @@ void twoOptImprove(tuple<int, vector<int>> &tspTour,
 int main(int argc, char *argv[])
 {
 	clock_t begin = clock();
-	vector<CityDistancePQ> graph1 = loadGraphOfMapAsMinHeaps(argv[1]);
+	CityDistancePQ graph1 = loadGraphOfMapAsPriorityQueue(argv[1]);
 	//printLoaded(graph);  -- Used only for testing
 	tuple<int, vector<int>> tspTour = loadTour(graph1);
-	
-	//Effectively deallocates memory used for graph 1 once no longer needed. 
+
+	//Effectively deallocates memory used for graph 1 once no longer needed.
 	//See https://stackoverflow.com/questions/10464992/c-delete-vector-objects-free-memory
-	vector<CityDistancePQ>().swap(graph1);		
-	
+	CityDistancePQ().swap(graph1);
+
 	vector<vector<int>> graph2 = loadGraphOfMapAsVectors(argv[1]);
 	twoOptImprove(tspTour, graph2);
 	clock_t end = clock();
 	double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
 	cout << "\nRunning Time: " << elapsed_secs << "\n" << endl;
-	
+
 	ofstream dataOut;
 	string inputFileName = argv[1];
 	dataOut.open(inputFileName + ".tour");
@@ -353,6 +405,4 @@ int main(int argc, char *argv[])
     {
         dataOut << get<1>(tspTour)[i] << "\n";
     }
-	
-	return 0;
 }
