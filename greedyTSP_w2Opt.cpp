@@ -2,10 +2,11 @@
 ** Program name: greedyTSP_w2Opt.cpp
 ** Class name: CS325-400
 ** Author: Ben Fridkis
-** Date: 5/22/2018
-** Description: Program using a greedy method to determine an approximate
-**				solution (usually results in tour < 5% above Held- Karp bound,
-**				https://web.tuke.sk/fei-cit/butka/hop/htsp.pdf).
+** Date: 6/4/2018
+** Description: Program using a greedy method to determine a solution
+**				to the traveling salesman problem.
+**				(Usually results in tour < 5% above Held- Karp bound,
+**				https://web.tuke.sk/fei-cit/butka/hop/htsp.pdf).)
 *******************************************************************************/
 
 #include <iostream>
