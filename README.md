@@ -1,5 +1,3 @@
 # CS325-FinalProject
 
-Two programs to use either a greedy algorithm or "nearest neighbot" strategy to solve TSP (Traveling Salesman Problem), both with and without solution improvement.
-
-(Uses 2-Opt technique for solution improvement.)
+Two programs to use either a greedy algorithm (greedyTSP_w2Opt.cpp) or "nearest neighbor" strategy (nearestNeighborTSP_w2Opt.cpp) to solve TSP (Traveling Salesman Problem), with 2-Opt solution improvement.
