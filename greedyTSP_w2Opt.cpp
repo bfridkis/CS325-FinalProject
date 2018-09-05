@@ -35,7 +35,7 @@ using std::make_tuple;
 using std::get;
 
 //Structure to represent an edge. Each CityDistance structure
-//hold the distance to a particular city.
+//holds the distance to a particular city.
 struct CityDistance{
 	int city;
 	int nextCity;
